@@ -61,6 +61,7 @@ protected:
     uint32_t                m_minPacketBreakTime;
     uint32_t                m_dmaChannel;
     volatile bool           m_markLongEnough;
+    volatile bool           m_waitingForTx;
     Timeout                 m_timeout;
     Timer                   m_timer;
 

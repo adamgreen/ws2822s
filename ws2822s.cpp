@@ -71,6 +71,7 @@ WS2822S::WS2822S(PinName tx, int baudRate /* = 250000 */) : Serial(tx, NC)
 
     m_frameCount = 0;
     m_markLongEnough = false;
+    m_waitingForTx = false;
     m_pPacket = NULL;
     m_pChannel = NULL;
     m_uartTx = 0;
@@ -119,6 +120,8 @@ bool WS2822S::init(uint32_t ledCount)
     _serial.uart->FCR = fifoEnable | dmaEnable;
 
     initGPDMA();
+
+    attach(this, &WS2822S::uartTxCompleteHandler, TxIrq);
 
     return true;
 }
@@ -184,20 +187,28 @@ void WS2822S::dmaHandler(uint32_t dmaInterrupts)
 
 void WS2822S::waitForTxToComplete()
 {
-    attach(this, &WS2822S::uartTxCompleteHandler, TxIrq);
+    m_waitingForTx = true;
 }
 
 void WS2822S::uartTxCompleteHandler()
 {
+    if (!m_waitingForTx)
+        return;
+
     // Now that UART transmit FIFO is empty, start the timer to make sure that there is enough MARK state between
     // packets.
     startMarkTimeout();
+    m_waitingForTx = false;
 }
 
 
 
 void WS2822S::set(const RGBData* pRGB)
 {
+    // Must call init before calling set the first time.
+    if (!m_pPacket)
+        return;
+
     waitForMarkBetweenPackets();
 
     // Start break condition now.
