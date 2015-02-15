@@ -21,9 +21,9 @@
 // The RGB data for each LED is packed into this structure.
 struct RGBData
 {
-    uint8_t red;
-    uint8_t green;
     uint8_t blue;
+    uint8_t green;
+    uint8_t red;
 };
 
 
